@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Monitoring Servis Rutin MBM - PNM Yogyakarta</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pnm: {
+              navy: '#00264d',
+              blue: '#004b8d',
+              lightBlue: '#0072bc',
+              sky: '#38bdf8',
+              green: '#00a651',
+              greenHover: '#008b43',
+              accent: '#f39c12'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            'glass': '0 8px 32px 0 rgba(0, 75, 141, 0.08)',
+            'card-hover': '0 20px 30px -10px rgba(0, 75, 141, 0.15)',
+            'glow-green': '0 0 20px rgba(0, 166, 81, 0.4)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background: radial-gradient(circle at 10% 20%, #eef5fc 0%, #e2ebf4 90%);
+      min-height: 100vh;
+    }
+
+    /* Subtle Glassmorphism Card Style */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+    }
+
+    /* Custom Input Focus Effect */
+    .custom-input {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .custom-input:focus {
+      border-color: #0072bc;
+      box-shadow: 0 0 0 4px rgba(0, 114, 188, 0.15);
+      background-color: #ffffff;
+    }
+
+    /* Custom Drag Drop Area */
+    .drop-zone {
+      border: 2px dashed #cbd5e1;
+      transition: all 0.3s ease;
+    }
+    .drop-zone.dragover {
+      border-color: #0072bc;
+      background-color: rgba(0, 114, 188, 0.05);
+      transform: scale(1.01);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="font-sans text-slate-800 antialiased selection:bg-pnm-lightBlue selection:text-white flex flex-col justify-between">
+
+  <!-- Main Container -->
+  <div class="w-full">
+    
+    <!-- Top Header Bar with PNM Gradient -->
+    <header class="relative bg-gradient-to-r from-pnm-navy via-pnm-blue to-pnm-lightBlue text-white shadow-xl overflow-hidden pb-12 pt-8 px-4 sm:px-6">
+      <!-- Decorative Background Ornaments -->
+      <div class="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-white/5 blur-2xl pointer-events-none"></div>
+      <div class="absolute left-1/4 -top-10 w-32 h-32 rounded-full bg-pnm-green/20 blur-xl pointer-events-none"></div>
+      
+      <!-- Green Accent Bar at Bottom Header -->
+      <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-pnm-green"></div>
+
+      <div class="max-w-3xl mx-auto text-center relative z-10">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-emerald-300 mb-3 tracking-wide uppercase">
+          <span class="w-2 h-2 rounded-full bg-pnm-green animate-pulse"></span>
+          PT Permodalan Nasional Madani
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm flex items-center justify-center gap-3">
+          <i class="fa-solid fa-screwdriver-wrench text-pnm-green"></i>
+          MONITORING SERVIS RUTIN MBM
+        </h1>
+        <p class="mt-2 text-xs sm:text-sm text-slate-200 font-medium">
+          Kantor Cabang Yogyakarta &bull; Layanan Pemeliharaan Kendaraan & Operasional
+        </p>
+      </div>
+    </header>
+
+    <!-- Floating Form Card Section -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 -mt-8 mb-12">
+      
+      <!-- Progress Bar Tracker -->
+      <div class="glass-card rounded-2xl p-4 shadow-glass mb-6">
+        <div class="flex justify-between items-center mb-2 px-1">
+          <span class="text-xs font-bold uppercase tracking-wider text-pnm-blue flex items-center gap-1.5">
+            <i class="fa-solid fa-bars-progress"></i> Kelengkapan Data
+          </span>
+          <span id="progressText" class="text-xs font-extrabold text-pnm-green">0% Selesai</span>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+          <div id="progressBar" class="bg-gradient-to-r from-pnm-blue to-pnm-green h-2.5 rounded-full w-0 transition-all duration-500 ease-out"></div>
+        </div>
+      </div>
+
+      <!-- Main Form Area -->
+      <form id="servisForm" class="space-y-6" novalidate>
+        
+        <!-- Field 1: Unit Kerja -->
+        <div class="glass-card rounded-2xl p-5 sm:p-6 shadow-glass hover:shadow-card-hover transition-all duration-300">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-pnm-blue/10 flex items-center justify-center text-pnm-blue font-bold">
+                <i class="fa-solid fa-building text-lg"></i>
+              </div>
+              <div>
+                <label for="unitKerja" class="block text-sm font-bold text-slate-800">Unit Kerja</label>
+                <p class="text-xs text-slate-500">Pilih atau ketik nama kantor unit kerja</p>
+              </div>
+            </div>
+            <span class="text-xs text-rose-500 font-semibold">*Wajib</span>
+          </div>
+
+          <div class="relative">
+            <input 
+              class="custom-input w-full bg-slate-50/50 border border-slate-300 text-slate-900 text-sm rounded-xl px-4 py-3.5 pr-10 focus:outline-none placeholder-slate-400 font-medium" 
+              list="unitKerjaOptions" 
+              id="unitKerja" 
+              name="unitKerja" 
+              placeholder="Cari Unit Kerja (contoh: MBM Sleman, MBM Bantul...)" 
+              required 
+              autocomplete="off"
+            >
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-slate-400">
+              <i class="fa-solid fa-chevron-down text-xs"></i>
+            </div>
+          </div>
+          <datalist id="unitKerjaOptions">
+            <option value="MBM Yogyakarta (Kanca)"></option>
+            <option value="MBM Sleman 1"></option>
+            <option value="MBM Sleman 2"></option>
+            <option value="MBM Bantul"></option>
+            <option value="MBM Gunungkidul"></option>
+            <option value="MBM Kulon Progo"></option>
+          </datalist>
+        </div>
+
+        <!-- Field 2: Tanggal Pelaksanaan -->
+        <div class="glass-card rounded-2xl p-5 sm:p-6 shadow-glass hover:shadow-card-hover transition-all duration-300">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-pnm-lightBlue/10 flex items-center justify-center text-pnm-lightBlue font-bold">
+                <i class="fa-solid fa-calendar-day text-lg"></i>
+              </div>
+              <div>
+                <label for="tanggal" class="block text-sm font-bold text-slate-800">Tanggal Pelaksanaan</label>
+                <p class="text-xs text-slate-500">Tanggal servis dilakukan</p>
+              </div>
+            </div>
+            <span class="text-xs text-rose-500 font-semibold">*Wajib</span>
+          </div>
+
+          <input 
+            type="date" 
+            class="custom-input w-full bg-slate-50/50 border border-slate-300 text-slate-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none font-medium" 
+            id="tanggal" 
+            name="tanggal" 
+            required
+          >
+        </div>
+
+        <!-- Field 3: Status Pengerjaan -->
+        <div class="glass-card rounded-2xl p-5 sm:p-6 shadow-glass hover:shadow-card-hover transition-all duration-300">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 font-bold">
+                <i class="fa-solid fa-list-check text-lg"></i>
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-800">Status Pengerjaan</label>
+                <p class="text-xs text-slate-500">Pilih progres servis saat ini</p>
+              </div>
+            </div>
+            <span class="text-xs text-rose-500 font-semibold">*Wajib</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Option Proses -->
+            <label class="relative flex items-center justify-center p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-amber-400 hover:bg-amber-50/40 transition-all duration-200 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50/80 has-[:checked]:shadow-md">
+              <input type="radio" name="status" value="Proses" class="sr-only" required>
+              <div class="text-center">
+                <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-600 mb-1">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div class="text-sm font-bold text-slate-800">Proses</div>
+                <div class="text-[11px] text-slate-500">Sedang Dikerjakan</div>
+              </div>
+            </label>
+
+            <!-- Option Done -->
+            <label class="relative flex items-center justify-center p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-pnm-green hover:bg-emerald-50/40 transition-all duration-200 has-[:checked]:border-pnm-green has-[:checked]:bg-emerald-50/80 has-[:checked]:shadow-md">
+              <input type="radio" name="status" value="Done" class="sr-only" required>
+              <div class="text-center">
+                <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-pnm-green mb-1">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div class="text-sm font-bold text-slate-800">Done</div>
+                <div class="text-[11px] text-slate-500">Selesai Dikerjakan</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Field 4: Detail / Keterangan Servis -->
+        <div class="glass-card rounded-2xl p-5 sm:p-6 shadow-glass hover:shadow-card-hover transition-all duration-300">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600 font-bold">
+                <i class="fa-solid fa-clipboard-list text-lg"></i>
+              </div>
+              <div>
+                <label for="keterangan" class="block text-sm font-bold text-slate-800">Keterangan / Detail Servis</label>
+                <p class="text-xs text-slate-500">Deskripsi perbaikan, penggantian sparepart, dll.</p>
+              </div>
+            </div>
+            <span class="text-xs text-rose-500 font-semibold">*Wajib</span>
+          </div>
+
+          <textarea 
+            id="keterangan" 
+            name="keterangan" 
+            rows="4" 
+            class="custom-input w-full bg-slate-50/50 border border-slate-300 text-slate-900 text-sm rounded-xl p-4 focus:outline-none placeholder-slate-400 font-medium resize-y"
+            placeholder="Contoh: Penggantian oli mesin, ganti kampas rem depan, tune up rutin..."
+            required
+          ></textarea>
+        </div>
+
+        <!-- Field 5: Lampiran Foto (Drag and Drop) -->
+        <div class="glass-card rounded-2xl p-5 sm:p-6 shadow-glass hover:shadow-card-hover transition-all duration-300">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-pnm-green font-bold">
+                <i class="fa-solid fa-camera text-lg"></i>
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-800">Lampiran Foto Kegiatan</label>
+                <p class="text-xs text-slate-500">Upload bukti fisik atau dokumentasi pengerjaan</p>
+              </div>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">Opsional</span>
+          </div>
+
+          <!-- Dropzone Container -->
+          <div id="dropZone" class="drop-zone rounded-xl p-6 text-center cursor-pointer bg-slate-50/50 hover:bg-slate-100/50 relative">
+            <input type="file" id="fotoInput" accept="image/*" class="hidden">
+            
+            <div id="dropZonePrompt" class="space-y-2">
+              <div class="w-12 h-12 rounded-full bg-pnm-blue/10 text-pnm-blue flex items-center justify-center mx-auto mb-3">
+                <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+              </div>
+              <p class="text-sm font-semibold text-slate-700">
+                Tarik & Lepas Foto di sini, atau <span class="text-pnm-lightBlue underline">Cari File</span>
+              </p>
+              <p class="text-xs text-slate-400">Format yang didukung: JPG, PNG, WEBP (Maks 5MB)</p>
+            </div>
+
+            <!-- Preview Image Box -->
+            <div id="previewBox" class="hidden relative group rounded-lg overflow-hidden border border-slate-200 shadow-md">
+              <img id="imgPreview" src="" alt="Preview Dokumentasi" class="w-full max-h-64 object-cover">
+              <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+                <button type="button" id="btnChangePhoto" class="px-3 py-1.5 bg-white text-slate-800 text-xs font-bold rounded-lg shadow hover:bg-slate-100 transition">
+                  <i class="fa-solid fa-arrows-rotate mr-1"></i> Ganti
+                </button>
+                <button type="button" id="btnRemovePhoto" class="px-3 py-1.5 bg-rose-600 text-white text-xs font-bold rounded-lg shadow hover:bg-rose-700 transition">
+                  <i class="fa-solid fa-trash-can mr-1"></i> Hapus
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="pt-2">
+          <button 
+            type="submit" 
+            id="btnSubmit" 
+            class="w-full bg-gradient-to-r from-pnm-green to-emerald-600 hover:from-pnm-greenHover hover:to-emerald-700 text-white font-extrabold text-base py-4 px-6 rounded-xl shadow-lg hover:shadow-glow-green transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 group"
+          >
+            <span>Kirim Laporan Servis</span>
+            <i class="fa-solid fa-paper-plane text-sm group-hover:translate-x-1 transition-transform"></i>
+          </button>
+        </div>
+
+      </form>
+
+    </main>
+  </div>
+
+  <!-- Minimal Footer -->
+  <footer class="text-center py-6 text-xs text-slate-500 border-t border-slate-200/60 bg-white/50 backdrop-blur-sm">
+    <p>&copy; 2026 PT Permodalan Nasional Madani (Persero) - MBM Yogyakarta</p>
+  </footer>
+
+  <!-- Core JavaScript -->
+  <script>
+    // URL Web App hasil Deploy Google Apps Script milik Anda
+    const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbyNQt9owB5Q1U_X2GUzt7WDLuEvW2_gXjqBt8D497jUNzpL42MJZFxUtZgwXbrFN6afvg/exec";
+
+    // Global variables for file handling
+    let fotoBase64 = "", fotoName = "", fotoMimeType = "";
+
+    // DOM Elements
+    const form = document.getElementById('servisForm');
+    const inputTanggal = document.getElementById('tanggal');
+    const inputUnitKerja = document.getElementById('unitKerja');
+    const inputKeterangan = document.getElementById('keterangan');
+    const dropZone = document.getElementById('dropZone');
+    const fotoInput = document.getElementById('fotoInput');
+    const dropZonePrompt = document.getElementById('dropZonePrompt');
+    const previewBox = document.getElementById('previewBox');
+    const imgPreview = document.getElementById('imgPreview');
+    const btnRemovePhoto = document.getElementById('btnRemovePhoto');
+    const btnChangePhoto = document.getElementById('btnChangePhoto');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+
+    // 1. Initial Setup
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set Default Tanggal ke Hari Ini (YYYY-MM-DD)
+      const today = new Date().toISOString().split('T')[0];
+      inputTanggal.value = today;
+
+      // Load Autocomplete Data if URL is valid
+      loadUnitKerjaData();
+
+      // Trigger Progress Calculation
+      updateProgress();
+    });
+
+    // 2. Fetch Unit Kerja Autocomplete from Apps Script Sheet
+    function loadUnitKerjaData() {
+      if (DEPLOY_URL && DEPLOY_URL !== "URL_DEPLOY_APPS_SCRIPT_ANDA_DI_SINI") {
+        fetch(`${DEPLOY_URL}?action=getUnitKerja`)
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+              const datalist = document.getElementById('unitKerjaOptions');
+              datalist.innerHTML = '';
+              data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item;
+                datalist.appendChild(opt);
+              });
+            }
+          })
+          .catch(err => console.log('Notice: Menggunakan opsi unit kerja standar.', err));
+      }
+    }
+
+    // 3. Real-time Form Progress Calculator
+    function updateProgress() {
+      let filledFields = 0;
+      const totalFields = 4; // Unit, Tanggal, Status, Keterangan
+
+      if (inputUnitKerja.value.trim() !== "") filledFields++;
+      if (inputTanggal.value !== "") filledFields++;
+      if (document.querySelector('input[name="status"]:checked')) filledFields++;
+      if (inputKeterangan.value.trim() !== "") filledFields++;
+
+      const percentage = Math.round((filledFields / totalFields) * 100);
+      progressBar.style.width = `${percentage}%`;
+      progressText.innerText = `${percentage}% Selesai`;
+    }
+
+    // Attach Input Event Listeners for Progress Update
+    form.addEventListener('input', updateProgress);
+    form.addEventListener('change', updateProgress);
+
+    // 4. Drag and Drop Photo Handler
+    dropZone.addEventListener('click', (e) => {
+      if (e.target !== btnRemovePhoto && !btnRemovePhoto.contains(e.target)) {
+        fotoInput.click();
+      }
+    });
+
+    btnChangePhoto.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fotoInput.click();
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('dragover');
+      }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files.length > 0) {
+        handlePhotoFile(files[0]);
+      }
+    });
+
+    fotoInput.addEventListener('change', function(e) {
+      if (this.files && this.files[0]) {
+        handlePhotoFile(this.files[0]);
+      }
+    });
+
+    function handlePhotoFile(file) {
+      if (!file.type.startsWith('image/')) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Format Tidak Sesuai',
+          text: 'Silakan pilih berkas gambar (JPG, PNG, WEBP).',
+          confirmButtonColor: '#004b8d'
+        });
+        return;
+      }
+
+      fotoName = file.name;
+      fotoMimeType = file.type;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        fotoBase64 = evt.target.result;
+        imgPreview.src = fotoBase64;
+        dropZonePrompt.classList.add('hidden');
+        previewBox.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    btnRemovePhoto.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fotoBase64 = "";
+      fotoName = "";
+      fotoMimeType = "";
+      fotoInput.value = "";
+      imgPreview.src = "";
+      previewBox.classList.add('hidden');
+      dropZonePrompt.classList.remove('hidden');
+    });
+
+    // 5. Form Submission Handler
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Check Basic Validation
+      const statusSelected = document.querySelector('input[name="status"]:checked');
+      if (!inputUnitKerja.value.trim() || !inputTanggal.value || !statusSelected || !inputKeterangan.value.trim()) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Data Belum Lengkap',
+          text: 'Mohon isi semua bidang yang bertanda bintang (*).',
+          confirmButtonColor: '#004b8d'
+        });
+        return;
+      }
+
+      // Set Loading UI State
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-lg"></i><span>Mengirim Laporan...</span>`;
+
+      const payload = {
+        unitKerja: inputUnitKerja.value.trim(),
+        tanggal: inputTanggal.value,
+        status: statusSelected.value,
+        keterangan: inputKeterangan.value.trim(),
+        fotoBase64: fotoBase64,
+        fotoName: fotoName,
+        fotoMimeType: fotoMimeType
+      };
+
+      // Send Data via Fetch POST API
+      if (DEPLOY_URL && DEPLOY_URL !== "URL_DEPLOY_APPS_SCRIPT_ANDA_DI_SINI") {
+        fetch(DEPLOY_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        .then(() => {
+          showSuccessAlert();
+        })
+        .catch(error => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Pengiriman Gagal',
+            text: 'Terjadi kesalahan sistem: ' + error.message,
+            confirmButtonColor: '#004b8d'
+          });
+        })
+        .finally(() => {
+          resetSubmitButton();
+        });
+      } else {
+        // Simulation for Demo / Testing Purpose when DEPLOY_URL is not configured
+        setTimeout(() => {
+          showSuccessAlert();
+          resetSubmitButton();
+        }, 1200);
+      }
+    });
+
+    function showSuccessAlert() {
+      Swal.fire({
+        icon: 'success',
+        title: 'Laporan Terkirim!',
+        text: 'Data monitoring servis rutin MBM berhasil disimpan.',
+        confirmButtonColor: '#00a651',
+        customClass: {
+          popup: 'rounded-2xl shadow-xl'
+        }
+      });
+
+      // Reset Form State
+      form.reset();
+      inputTanggal.valueAsDate = new Date();
+      btnRemovePhoto.click();
+      updateProgress();
+    }
+
+    function resetSubmitButton() {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = `<span>Kirim Laporan Servis</span><i class="fa-solid fa-paper-plane text-sm group-hover:translate-x-1 transition-transform"></i>`;
+    }
+  </script>
+</body>
+</html>
